@@ -23,7 +23,7 @@ reset:
 
 load:
     mov ah, 02h ;lê um setor do disco
-    mov al, 4   ;quantidade de setores ocupados pelo boot2
+    mov al, 1   ;quantidade de setores ocupados pelo boot2
     mov ch, 0   ;track 0
     mov cl, 2   ;sector 2
     mov dh, 0   ;head 0
@@ -34,5 +34,6 @@ load:
 
     jmp 0x500   ;pula para o setor de endereco 0x500 (start do boot2)
 
+jmp $
 times 510-($-$$) db 0 ;512 bytes
 dw 0xaa55             ;assinatura
