@@ -1,243 +1,125 @@
 org 0x500
 jmp 0x0000:start
+ 
+;como o endereço dado para o kernel é 0x7e00, devemos
+;utilizar o método de shift left (hexadecimal)
+;e somar o offset no adress base, para rodarmos o kernel.
 
-;Textos menu
-titulo      db 'Who Types The Fastest', 0
-jogar       db 'Play (1)', 0
-instrucoes  db 'Instruction (2)', 0
-creditos    db 'Credits (3)', 0
+loading db 'Loading structures for the kernel...', 0
+protectedMode db 'Setting up protected mode...', 0
+loadingKernel db 'Loading kernel in memory...', 0
+runningKernel db 'Running kernel...', 0
+;challenge db 'Press Enter if you think you type fast enough.'
+;are you ready for the biggest contest of your life?
+;PRESS Y/N
 
-;instrucoes
-instrucao1 db 'Are you the fastest typer alive?', 0
-instrucao2 db 'Type as many words as you can in 60 seconds', 0
-instrucao3 db 'For each wrong letter you lose points', 0
-instrucao4 db 'When the time runs out you will have your score', 0
-instrucao5 db 'Press any key to return', 0
+printe:
+	lodsb
+	cmp al,0
+	je done
 
-;creditos
-creditos1 db 'Arthur Henrique <ahtlc>', 0
-creditos2 db 'Gabriel Fonseca <gfsca>', 0
-creditos3 db 'Gabriel Toscano <gtbo>', 0
+	mov ah, 0eh
+	mov bl, 0x2
+	int 10h
 
-;Funçao para printar strings
-printString:
-		lodsb
-		mov ah, 0xe
-		mov bh, 0
-		mov bl, 0xf
+	mov dx, 0
+	.delei: ;delay
+	inc dx
+	mov cx, 0
+		.time:
+			inc cx
+			cmp cx, 10000
+			jne .time
+
+	cmp dx, 1000
+	jne .delei
+
+	jmp printe
+
+	done:
+		mov ah, 0eh
+		mov al, 0xd
 		int 10h
+		mov al, 0xa
+		int 10h
+		ret
 
-		cmp al, 0
-		jne printString
-        ret
-
-;Inicio do programa
 start:
-    ;Zerando os registradores
-    mov ax, 0
+    xor ax, ax
     mov ds, ax
+    mov es, ax
 
-    ;Chamando a função Menu
-    call Menu
+    mov ah,0 
+	mov al, 12h
+	int 10h ;setando modo gráfico
 
-    jmp done
-
-Menu:
-
-    ;Carregando o video
-    mov ah, 0
-    mov al,12h
-    int 10h
-
-    ;Mudando a cor do background para azul escuro
-    mov ah, 0bh
-    mov bh, 0
-    mov bl, 1
-    int 10h 
-
-    ;Colocando o Titulo
-	mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 3    ;Linha
-	mov dl, 29   ;Coluna
-	int 10h
-    mov si, titulo
-    call printString
-
-    ;Colocando a string jogar
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 15   ;Linha
-	mov dl, 38   ;Coluna
-	int 10h
-    mov si, jogar
-    call printString
     
-    ;Colocando a string intrucoes
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 20   ;Linha
-	mov dl, 34   ;Coluna
-	int 10h
-    mov si, instrucoes
-    call printString
+	mov ah,0xb
+	mov bh,0
+	mov bl, 0 
+	int 10h ; colocando o fundo como preto
+
+    ;parte pra printar as mensagens que quisermos
+
+    mov si, loading
+    call printe
+
+
+    mov si, protectedMode
+    call printe
+
+
+    mov si, loadingKernel
+    call printe
+
+
+    mov si, runningKernel
+    call printe
+
+    jmp reset
+    ;mov si, challenge
+    ;call print_string
     
-    ;Colocando a string creditos
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 25   ;Linha
-	mov dl, 34   ;Coluna
-	int 10h
-    mov si, creditos
-    call printString
-    
-    ;Selecionar a opcao do usuario
-    selecao:
-        ;Receber a opção
-        mov ah, 0
-        int 16h
-        
-        ;Comparando com '1'
-        cmp al, 50
-        je play
-        
-        ;Comparando com '2'
-        cmp al, 51
-        je instrucao
-        
-        ;Comparando com '3'
-        cmp al, 52
-        je credito
-        
-        ;Caso não seja nem '1' ou '2' ou '3' ele vai receber a string dnv
-        jne selecao
-;Arthur       
-play:
 
-;Caso seja selecionado "Instruction (2)"
-instrucao:
-    ;Carregando o video para limpar a tela
-    mov ah, 0
-    mov al,12h
-    int 10h
+    reset:
+        mov ah, 00h ;reseta o controlador de disco
+        mov dl, 0   ;floppy disk
+        int 13h
 
-    ;Mudando a cor do background para azul escuro
-    mov ah, 0bh
-    mov bh, 0
-    mov bl, 1
-    int 10h 
+        jc reset    ;se o acesso falhar, tenta novamente
 
-    ;Colocando o titulo
-	mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 3    ;Linha
-	mov dl, 29   ;Coluna
-	int 10h
-    mov si, instrucoes
-    call printString
+        jmp load_kernel
 
-    ;Colocando a string instrucao1
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 7    ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, instrucao1
-    call printString
+    load_kernel:
+        ;Setando a posição do disco onde kernel.asm foi armazenado(ES:BX = [0x7E00:0x0])
+        mov ax,0x7E0	;0x7E0<<1 + 0 = 0x7E00
+        mov es,ax
+        xor bx,bx		;Zerando o offset
 
-    ;Colocando a string instrucao2
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 9    ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, instrucao2
-    call printString
+        mov ah, 0x02 ;le o setor do disco
+        mov al, 20  ;porção de setores ocupados pelo kernel.asm
+        mov ch, 0   ;track 0
+        mov cl, 3   ;setor 3
+        mov dh, 0   ;head 0
+        mov dl, 0   ;drive 0
+        int 13h
 
-    ;Colocando a string instrucao3
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 11   ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, instrucao3
-    call printString
+        jc load_kernel ;se o acesso falhar, tenta novamente
 
-    ;Colocando a string instrucao4
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 13   ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, instrucao4
-    call printString
+        jmp 0x7e00  ;pula para o setor de endereco 0x7e00, que é o kernel
 
-    ;Colocando a string instrucao5
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 20   ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, instrucao5
-    call printString
+   ; print_string:  
+    ;    lodsb ;carrega o que tá em SI
+     ;   cmp al, 0 ;vê se o que foi carregado em al é igual a /0
+      ;  je end_string ;se for, n tem mais o que printar
+;
+ ;       mov ah, 0xe ;printa o caracter
+  ;      int 10h	
+   ;     
+    ;    jmp print_string 
+     ;   end_string:
+      ;      ret
 
-    ;Para receber o caractere
-    mov ah, 0
-    int 16h
 
-    ;Apos receber qualquer caractere volta pro menu
-    call Menu
-
-;Caso seja selecionado "Credits (3)"
-credito:
-    ;Carregando o video para limpar a tela
-    mov ah, 0
-    mov al,12h
-    int 10h
-
-    ;Mudando a cor do background para azul escuro
-    mov ah, 0bh
-    mov bh, 0
-    mov bl, 1
-    int 10h 
-
-    ;Colocando o titulo
-	mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 3    ;Linha
-	mov dl, 29   ;Coluna
-	int 10h
-    mov si, creditos
-    call printString
-
-    ;Colocando a string creditos1
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 7    ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, creditos1
-    call printString
-
-    ;Colocando a string creditos2
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 9    ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, creditos2
-    call printString
-
-    ;Colocando a string creditos3
-    mov ah, 02h  ;Setando o cursor
-	mov bh, 0    ;Pagina 0
-	mov dh, 11   ;Linha
-	mov dl, 10   ;Coluna
-	int 10h
-    mov si, creditos3
-    call printString
-
-done:
-    jmp $
-    times 2040 - ($ - $$) db 0
-    dw 0xaa55
+    times 510-($-$$) db 0
+    dw 0xaa55	
