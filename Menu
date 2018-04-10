@@ -1,0 +1,35 @@
+;Colocando o titulo
+	mov ah, 02h  ;Setando o cursor
+	mov bh, 0    ;Pagina 0
+	mov dh, 3    ;Linha
+	mov dl, 29   ;Coluna
+	int 10h
+    mov si, instrucoes
+    call printString
+
+    ;Colocando a string instrucao1
+    mov ah, 02h  ;Setando o cursor
+	mov bh, 0    ;Pagina 0
+	mov dh, 7    ;Linha
+	mov dl, 10   ;Coluna
+	int 10h
+    mov si, instrucao1
+    call printString
+
+    ;Colocando a string instrucao2
+    mov ah, 02h  ;Setando o cursor
+	mov bh, 0    ;Pagina 0
+	mov dh, 9    ;Linha
+	mov dl, 10   ;Coluna
+	int 10h
+    mov si, instrucao2
+    call printString
+
+    ;Colocando a string instrucao3
+    mov ah, 02h  ;Setando o cursor
+	mov bh, 0    ;Pagina 0
+	mov dh, 11    ;Linha
+	mov dl, 10   ;Coluna
+	int 10h
+    mov si, instrucao3
+    call printString
