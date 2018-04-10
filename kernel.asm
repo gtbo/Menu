@@ -183,6 +183,7 @@ instrucao:
     mov si, instrucao5
     call printString
 
+ESCinstrucao:    
     ;Para receber o caractere
     mov ah, 0
     int 16h
@@ -190,7 +191,7 @@ instrucao:
     ;Apos receber 'Esc' volta pro menu
     cmp al, 27
 	je Menu
-	jne instrucao
+	jne ESCinstrucao
 
 ;Caso seja selecionado "Credits (3)"
 credito:
@@ -250,6 +251,7 @@ credito:
     mov si, creditos4
     call printString
 
+ESCcreditos
 	;Para receber o caractere
     mov ah, 0
     int 16h
@@ -257,7 +259,7 @@ credito:
     ;Apos receber 'Esc' volta pro menu
     cmp al, 27
 	je Menu
-	jne credito
+	jne ESCcreditos
 
 done:
     jmp $
