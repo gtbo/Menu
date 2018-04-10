@@ -85,7 +85,7 @@ Menu:
     ;Colocando a string creditos
     mov ah, 02h  ;Setando o cursor
 	mov bh, 0    ;Pagina 0
-	mov dh, 20   ;Linha
+	mov dh, 25   ;Linha
 	mov dl, 34   ;Coluna
 	int 10h
     mov si, creditos
