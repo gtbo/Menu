@@ -8,16 +8,17 @@ instrucoes  db 'Instruction (2)', 0
 creditos    db 'Credits (3)', 0
 
 ;instrucoes
-instrucao1 db 'Are you the Fastest typer alive?', 0
+instrucao1 db 'Are you the fastest typer alive?', 0
 instrucao2 db 'Type as many words as you can in 60 seconds', 0
 instrucao3 db 'For each wrong letter you lose points', 0
 instrucao4 db 'When the time runs out you will have your score', 0
-instrucao5 db 'Press any key to return', 0
+instrucao5 db 'Press Esc to return', 0
 
 ;creditos
 creditos1 db 'Arthur Henrique <ahtlc>', 0
 creditos2 db 'Gabriel Fonseca <gfsca>', 0
 creditos3 db 'Gabriel Toscano <gtbo>', 0
+creditos4 db 'Press Esc to return', 0
 
 ;Funçao para printar strings
 printString:
@@ -77,7 +78,7 @@ Menu:
     mov ah, 02h  ;Setando o cursor
 	mov bh, 0    ;Pagina 0
 	mov dh, 20   ;Linha
-	mov dl, 36   ;Coluna
+	mov dl, 34   ;Coluna
 	int 10h
     mov si, instrucoes
     call printString
@@ -86,7 +87,7 @@ Menu:
     mov ah, 02h  ;Setando o cursor
 	mov bh, 0    ;Pagina 0
 	mov dh, 25   ;Linha
-	mov dl, 34   ;Coluna
+	mov dl, 36   ;Coluna
 	int 10h
     mov si, creditos
     call printString
@@ -186,8 +187,10 @@ instrucao:
     mov ah, 0
     int 16h
 
-    ;Apos receber qualquer caractere volta pro menu
-    call Menu
+    ;Apos receber 'Esc' volta pro menu
+    cmp al, 27
+	je Menu
+	jne instrucao
 
 ;Caso seja selecionado "Credits (3)"
 credito:
@@ -238,6 +241,23 @@ credito:
     mov si, creditos3
     call printString
 
+	;Colocando a string creditos4
+    mov ah, 02h  ;Setando o cursor
+	mov bh, 0    ;Pagina 0
+	mov dh, 20   ;Linha
+	mov dl, 10   ;Coluna
+	int 10h
+    mov si, creditos4
+    call printString
+
+	;Para receber o caractere
+    mov ah, 0
+    int 16h
+
+    ;Apos receber 'Esc' volta pro menu
+    cmp al, 27
+	je Menu
+	jne credito
+
 done:
     jmp $
-    
