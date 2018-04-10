@@ -15,8 +15,8 @@ instrucao4 db 'When the time runs out you will have your score', 0
 instrucao5 db 'Press any key to return', 0
 
 ;creditos
-creditos1 db 'Arthur Henrique <>', 0
-creditos2 db 'Gabriel Fonseca <>', 0
+creditos1 db 'Arthur Henrique <ahtlc>', 0
+creditos2 db 'Gabriel Fonseca <gfsca>', 0
 creditos3 db 'Gabriel Toscano <gtbo>', 0
 
 ;Funçao para printar strings
@@ -238,7 +238,7 @@ credito:
     call printString
 
 done:
-    hlt
+    jmp $
     times 510 - ($ - $$) db 0
     dw 0xaa55
 
